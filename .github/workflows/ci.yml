@@ -1,0 +1,56 @@
+name: CI Robot Tests with Doppler
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout your repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Doppler CLI
+      - name: Install Doppler CLI
+        run: curl -Ls https://cli.doppler.com/install.sh | sh
+
+      # Step 3: Build Docker image
+      - name: Build Docker image
+        run: docker build -t jira-automation:ci .
+
+      # Step 4: Create artifacts directory
+      - name: Create artifacts directory
+        run: mkdir -p artifacts
+
+      # Step 5: Run Robot tests with Doppler injecting secrets
+      - name: Run Robot tests
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          doppler run -- \
+            docker run --rm \
+              -e EMAIL="$EMAIL" \
+              -e UI_PASSWORD="$UI_PASSWORD" \
+              -e API_TOKEN="$API_TOKEN" \
+              -e JIRA_BASE_URL="$JIRA_BASE_URL" \
+              -v "$PWD/artifacts:/app/artifacts" \
+              jira-automation:ci \
+              robot \
+                --output /app/artifacts/output.xml \
+                --log /app/artifacts/log.html \
+                --report /app/artifacts/report.html \
+                Jira_Project/resources/E2E_Jira.robot
+
+      # Step 6: Upload Robot reports
+      - name: Upload Robot reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-reports
+          path: artifacts/
+          if-no-files-found: warn
