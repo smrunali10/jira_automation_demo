@@ -15,9 +15,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Install Doppler CLI
+      # Step 2: Install Doppler CLI (official action, no sudo needed)
       - name: Install Doppler CLI
-        run: curl -Ls https://cli.doppler.com/install.sh | sh
+        uses: dopplerhq/cli-action@v1
 
       # Step 3: Build Docker image
       - name: Build Docker image
