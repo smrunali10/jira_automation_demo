@@ -43,4 +43,45 @@ Extract From Response
     [Arguments]    ${request_id}    ${json_path}
     ${value}=    Execute RC    <<<rc, ${request_id}, body, ${json_path}>>>
     RETURN    ${value}
-#============================================
+
+Delete Jira Epic
+    [Arguments]    ${epic_key}    ${email}    ${token}
+    ${request_id}=    Set Variable    delete_${epic_key}
+    ${HEADERS}=       Create Jira Headers
+    Make HTTP Request
+    ...    ${request_id}
+    ...    ${BASE_URL}/rest/api/2/issue/${epic_key}
+    ...    method=DELETE
+    ...    requestHeaders=${HEADERS}
+    ...    expectedStatusCode=204
+    ...    authType=Basic
+    ...    username=${email}
+    ...    password=${token}
+
+    Log To Console    Deleted Epic: ${epic_key}
+
+Create Epic With Invalid Project Key
+    [Arguments]    ${email}    ${token}
+    ${invalid_project}=    Create Dictionary    key=FAKE123
+    ${issuetype}=          Create Dictionary    name=Epic
+    ${fields}=             Create Dictionary
+    ...    project=${invalid_project}
+    ...    summary=Invalid Epic
+    ...    description=This should fail
+    ...    issuetype=${issuetype}
+    ${payload}=            Create Dictionary    fields=${fields}
+
+    ${request_id}=    Set Variable    invalid_epic_${TEST NAME}
+    ${HEADERS}=       Create Jira Headers
+    Make HTTP Request
+    ...    ${request_id}
+    ...    ${BASE_URL}/rest/api/2/issue
+    ...    method=POST
+    ...    requestHeaders=${HEADERS}
+    ...    requestBody=${payload}
+    ...    expectedStatusCode=400
+    ...    authType=Basic
+    ...    username=${email}
+    ...    password=${token}
+
+    Log To Console    Negative test passed: Epic creation failed as expected

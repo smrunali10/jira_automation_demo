@@ -21,7 +21,7 @@ class JiraUI:
     @keyword("Login With Cookies Or Fallback")
     def login_with_cookies_or_fallback(self, email=None, password=None, storage_file="jira_storage.json"):
         storage_path = os.path.join(os.path.dirname(__file__), storage_file)
-        print("Looking for storage state at:", storage_path)
+        logger.info(f"Looking for storage state at: {storage_path}")
 
         if os.path.exists(storage_path):
             try:
@@ -52,29 +52,14 @@ class JiraUI:
         self.page.get_by_test_id("login-submit-idf-testid").click()
         self.page.wait_for_selector("a[href*='/browse/JIRA']", timeout=60000)
 
-    # @keyword("Open Jira Project Board")
-    # def open_jira_project_board(self, project_key="JIRA"):
-    #     xpath = f"//a[contains(@href,'/browse/{project_key}')]"
-    #     self.page.wait_for_selector(xpath, timeout=60000)
-    #     project_link = self.page.locator(xpath).first
-    #     project_link.scroll_into_view_if_needed()
-    #     project_link.click(force=True)
-    #
-    #     # elements = self.page.locator("//h2//span").all_text_contents()
-    #     # print("Found spans:", elements)
-    #
-    #     self.page.wait_for_selector("//span[normalize-space(text())='List']", timeout=60000)
-    #     self.page.locator("//span[normalize-space(text())='List']").click()
     @keyword("Open Jira Project Board")
     def open_jira_project_board(self, project_key="JIRA"):
-        # Target the project board link (not browse link)
         xpath = f"//a[contains(@href,'/jira/software/projects/{project_key}/boards')]"
         self.page.wait_for_selector(xpath, timeout=60000)
         project_link = self.page.locator(xpath).first
         project_link.scroll_into_view_if_needed()
         project_link.click(force=True)
 
-        # Wait until the board view loads
         self.page.wait_for_selector("//span[normalize-space(text())='List']", timeout=60000)
         self.page.locator("//span[normalize-space(text())='List']").click()
 
