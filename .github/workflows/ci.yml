@@ -44,7 +44,7 @@ jobs:
                 --output /app/artifacts/output.xml \
                 --log /app/artifacts/log.html \
                 --report /app/artifacts/report.html \
-                Jira_Project/resources/E2E_Jira.robot
+                /app/Jira_Project/resources/E2E_Jira.robot
 
       # Step 6: Upload Robot reports
       - name: Upload Robot reports
