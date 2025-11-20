@@ -13,15 +13,13 @@ jobs:
     env:
       DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
       JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-      # If Jira also needs your email, add:
-      # JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -32,13 +30,12 @@ jobs:
 
       - name: Run Robot Framework tests
         run: |
-          # Example: pass secrets into Robot Framework as variables
           robot --variable DOPPLER_TOKEN:$DOPPLER_TOKEN \
                 --variable JIRA_API_TOKEN:$JIRA_API_TOKEN \
                 tests/
 
       - name: Upload Robot Framework reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: robot-reports
           path: |
