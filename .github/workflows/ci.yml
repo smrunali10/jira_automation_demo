@@ -1,50 +1,54 @@
-name: CI
+name: CI Robot Tests with Doppler
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # Checkout your repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
+      # Install Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
+      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Install Doppler CLI safely
+      # Install Doppler CLI
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v1
 
-      # Authenticate Doppler using your GitHub Secret
-      - name: Setup Doppler
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: doppler configure set token $DOPPLER_TOKEN
-
       # Run Robot Framework tests with Doppler injecting secrets
       - name: Run Robot Framework tests
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
           doppler run -- \
-            robot resources/
+            robot resources/E2E_Jira.robot \
+              --output output.xml \
+              --log log.html \
+              --report report.html
 
-      - name: Upload Robot Framework reports
+      # Upload Robot reports
+      - name: Upload Robot reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: robot-reports
           path: |
-            report.html
-            log.html
             output.xml
+            log.html
+            report.html
