@@ -1,57 +1,47 @@
-name: CI Robot Tests with Doppler
+name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
+    env:
+      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      # If Jira also needs your email, add:
+      # JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+
     steps:
-      # Step 1: Checkout your repo
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # Step 2: Install Doppler CLI (official action, no sudo needed)
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v1
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-      # Step 3: Build Docker image
-      - name: Build Docker image
-        run: docker build -t jira-automation:ci .
-
-      # Step 4: Create artifacts directory
-      - name: Create artifacts directory
-        run: mkdir -p artifacts
-
-      # Step 5: Run Robot tests with Doppler injecting secrets
-      - name: Run Robot tests
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+      - name: Install dependencies
         run: |
-          doppler run -- \
-            docker run --rm \
-              -e EMAIL="$EMAIL" \
-              -e UI_PASSWORD="$UI_PASSWORD" \
-              -e API_TOKEN="$API_TOKEN" \
-              -e JIRA_BASE_URL="$JIRA_BASE_URL" \
-              -v "$PWD:/app" \
-              -v "$PWD/artifacts:/app/artifacts" \
-              jira-automation:ci \
-              robot \
-                --output /app/artifacts/output.xml \
-                --log /app/artifacts/log.html \
-                --report /app/artifacts/report.html \
-                /app/resources/E2E_Jira.robot
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      # Step 6: Upload Robot reports
-      - name: Upload Robot reports
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Run Robot Framework tests
+        run: |
+          # Example: pass secrets into Robot Framework as variables
+          robot --variable DOPPLER_TOKEN:$DOPPLER_TOKEN \
+                --variable JIRA_API_TOKEN:$JIRA_API_TOKEN \
+                tests/
+
+      - name: Upload Robot Framework reports
+        uses: actions/upload-artifact@v3
         with:
           name: robot-reports
-          path: artifacts/
-          if-no-files-found: warn
+          path: |
+            report.html
+            log.html
+            output.xml
