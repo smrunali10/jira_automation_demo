@@ -24,17 +24,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Install Doppler CLI
+      # Install Doppler CLI safely
       - name: Install Doppler CLI
-        run: |
-          curl -Ls https://cli.doppler.com/install.sh | sh
+        uses: dopplerhq/cli-action@v1
 
       # Authenticate Doppler using your GitHub Secret
       - name: Setup Doppler
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          doppler configure set token $DOPPLER_TOKEN
+        run: doppler configure set token $DOPPLER_TOKEN
 
       # Run Robot Framework tests with Doppler injecting secrets
       - name: Run Robot Framework tests
